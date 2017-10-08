@@ -1,14 +1,13 @@
 package model;
 
-import javafx.scene.control.Button;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 import java.util.Random;
 
-public class Field {
+public class FieldFx {
     private  final int N = 10;
-
+    private final int shift[] = {-1, 0, 1};
     public  int[][] field = new int[N][N];
     public BaseCell[][] buttonField = new BaseCell[N][N];
 
@@ -16,73 +15,14 @@ public class Field {
         return (x >= 0 && y >= 0 && y < N && x < N);
     }
 
-    private void recursiveShow(int x, int y) {
-        if (isCorrectIndex(x-1, y-1) && ( buttonField[x-1][y-1] instanceof EmptyCell) && !buttonField[x-1][y-1].isActivated) {
-            buttonField[x-1][y-1].show();
-            recursiveShow(x-1, y-1);
-        }
-        if (isCorrectIndex(x, y-1) && ( buttonField[x][y-1] instanceof EmptyCell) && !buttonField[x][y-1].isActivated) {
-            buttonField[x][y-1].show();
-            recursiveShow(x, y-1);
-        }
-        if (isCorrectIndex(x+1, y-1) && ( buttonField[x+1][y-1] instanceof EmptyCell) && !buttonField[x+1][y-1].isActivated) {
-            buttonField[x+1][y-1].show();
-            recursiveShow(x+1, y-1);
-        }
-        if (isCorrectIndex(x-1, y) && ( buttonField[x-1][y] instanceof EmptyCell) && !buttonField[x-1][y].isActivated) {
-            buttonField[x-1][y].show();
-            recursiveShow(x-1, y);
-        }
-        if (isCorrectIndex(x+1, y) && ( buttonField[x+1][y] instanceof EmptyCell) && !buttonField[x+1][y].isActivated) {
-            buttonField[x+1][y].show();
-            recursiveShow(x+1, y);
-        }
-        if (isCorrectIndex(x-1, y+1) && ( buttonField[x-1][y+1] instanceof EmptyCell) && !buttonField[x-1][y+1].isActivated) {
-            buttonField[x-1][y+1].show();
-            recursiveShow(x-1, y+1);
-        }
-        if (isCorrectIndex(x, y+1) && ( buttonField[x][y+1] instanceof EmptyCell) && !buttonField[x][y+1].isActivated) {
-            buttonField[x][y+1].show();
-            recursiveShow(x, y+1);
-        }
-        if (isCorrectIndex(x+1, y+1) && ( buttonField[x+1][y+1] instanceof EmptyCell) && !buttonField[x+1][y+1].isActivated) {
-            buttonField[x+1][y+1].show();
-            recursiveShow(x+1, y+1);
-        }
-
-        if (isCorrectIndex(x-1, y-1) &&  !buttonField[x-1][y-1].isActivated)
-            buttonField[x-1][y-1].show();
-        if (isCorrectIndex(x, y-1) &&  !buttonField[x][y-1].isActivated)
-            buttonField[x][y-1].show();
-        if (isCorrectIndex(x+1, y-1) && !buttonField[x+1][y-1].isActivated)
-            buttonField[x+1][y-1].show();
-        if (isCorrectIndex(x-1, y) &&  !buttonField[x-1][y].isActivated)
-            buttonField[x-1][y].show();
-        if (isCorrectIndex(x+1, y) &&  !buttonField[x+1][y].isActivated)
-            buttonField[x+1][y].show();
-        if (isCorrectIndex(x-1, y+1) &&  !buttonField[x-1][y+1].isActivated)
-            buttonField[x-1][y+1].show();
-        if (isCorrectIndex(x, y+1)  && !buttonField[x][y+1].isActivated)
-            buttonField[x][y+1].show();
-        if (isCorrectIndex(x+1, y+1) && !buttonField[x+1][y+1].isActivated)
-            buttonField[x+1][y+1].show();
-
-    }
-
-    private void bombShow() {
-        for (int i = 0; i < N; i++)
-            for(int j = 0; j < N; j++)
-                buttonField[i][j].show();
-    }
-
-    public Field() {
+    public FieldFx() {
         Random random = new Random();
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
                 int temp = random.nextInt(N);
                 if (temp < 2) {
                     field[i][j] = -1;
-                    buttonField[i][j] = new BombCell();
+                    buttonField[i][j] = new BombCellFx();
                 }
             }
         for (int i = 0; i < N; i++)
@@ -96,16 +36,18 @@ public class Field {
                             + ((isCorrectIndex(i + 1, j - 1) && (field[i + 1][j - 1] == -1)) ? 1 : 0)
                             + ((isCorrectIndex(i + 1, j) && (field[i + 1][j] == -1)) ? 1 : 0)
                             + ((isCorrectIndex(i + 1, j + 1) && (field[i + 1][j + 1] == -1)) ? 1 : 0);
-                    buttonField[i][j] = (field[i][j] > 0) ? new NumberCell(field[i][j]) : new EmptyCell(i, j);
+                    buttonField[i][j] = (field[i][j] > 0) ? new NumberCellFx(field[i][j]) : new EmptyCellFx(i, j);
                     if (buttonField[i][j] instanceof EmptyCell) {
                         EmptyCell temp = (EmptyCell) buttonField[i][j];
                         temp.button.setOnMouseClicked((MouseEvent event) -> {
                             MouseButton button = event.getButton();
 
                             if (button == MouseButton.PRIMARY) {
-                                temp.button.setText("Empty");
-                                temp.isActivated = true;
-                                recursiveShow(temp.x, temp.y);
+                                if (!temp.isFlagged) {
+                                    temp.isActivated = true;
+                                    temp.button.setStyle("-fx-background-color: #7140ed; ");
+                                    recursiveShow(temp.x, temp.y);
+                                }
                             } else if (button == MouseButton.SECONDARY && !temp.isActivated) {
                                 if (!temp.isFlagged) {
                                     temp.button.setText("Flagged");
@@ -124,9 +66,12 @@ public class Field {
                             MouseButton button = event.getButton();
 
                             if (button == MouseButton.PRIMARY) {
-                                temp.button.setText("Bomb");
-                                temp.isActivated = true;
-                                bombShow();
+                                if (!temp.isFlagged) {
+                                    temp.button.setText("Bomb");
+                                    temp.button.setStyle("-fx-background-color: #7140ed; ");
+                                    temp.isActivated = true;
+                                    bombShow();
+                                }
                             }   else if (button == MouseButton.SECONDARY && !temp.isActivated){
                                 if (!temp.isFlagged) {
                                     temp.button.setText("Flagged");
@@ -141,6 +86,27 @@ public class Field {
                     }
 
             }
+    }
+
+    private void bombShow() {
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                buttonField[i][j].show();
+    }
+
+    private void recursiveShow(int x, int y) {
+        for (int xAcc : shift)
+            for (int yAcc : shift)
+                if (this.isCorrectIndex(x + xAcc, y + yAcc) && this.buttonField[x + xAcc][y + yAcc] instanceof EmptyCell
+                        && !this.buttonField[x + xAcc][y + yAcc].isActivated) {
+                    this.buttonField[x + xAcc][y + yAcc].show();
+                    this.recursiveShow(x + xAcc, y + yAcc);
+                }
+        for (int xAcc : shift)
+            for (int yAcc : shift)
+                if (this.isCorrectIndex(x + xAcc, y + yAcc)
+                        && !this.buttonField[x + xAcc][y + yAcc].isActivated)
+                    this.buttonField[x + xAcc][y + yAcc].show();
     }
 
 
