@@ -1,4 +1,4 @@
-package model;
+package model.general;
 
 import javafx.scene.control.Button;
 
@@ -6,8 +6,8 @@ import javafx.scene.control.Button;
 
 public abstract class BaseCell {
     public Button button = new Button();
-    protected boolean isFlagged = false;
-    protected boolean isActivated = false;
+    public boolean isFlagged = false;
+    public boolean isActivated = false;
     public int x;
     public int y;
 

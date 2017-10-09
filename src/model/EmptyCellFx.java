@@ -1,5 +1,9 @@
 package model;
 
+import model.general.EmptyCell;
+
+import static model.FieldFx.activated;
+
 public class EmptyCellFx extends EmptyCell {
     EmptyCellFx(int x, int y) {
         this.x = x;
@@ -7,7 +11,8 @@ public class EmptyCellFx extends EmptyCell {
     }
 
     public void show() {
-        button.setStyle("-fx-background-color: #7140ed; ");
+        button.setStyle("-fx-background-color: #7140ED; ");
+        activated--;
         this.isActivated = true;
     }
 }

@@ -1,26 +1,33 @@
 package model;
 
+import javafx.scene.control.Alert;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import model.general.BaseCell;
+import model.general.BombCell;
+import model.general.EmptyCell;
 
 import java.util.Random;
 
 public class FieldFx {
-    private  final int N = 10;
-    private final int shift[] = {-1, 0, 1};
-    public  int[][] field = new int[N][N];
-    public BaseCell[][] buttonField = new BaseCell[N][N];
 
-    private boolean isCorrectIndex(int x, int y) {
-        return (x >= 0 && y >= 0 && y < N && x < N);
-    }
+    private static final int shift[] = {-1, 0, 1};
+    static int activated;
+    private final int N;
+    public int[][] field;
+    public BaseCell[][] buttonField;
 
-    public FieldFx() {
+
+    public FieldFx(int N) {
+        this.N = N;
+        field = new int[N][N];
+        buttonField = new BaseCell[N][N];
+        activated = N * N;
         Random random = new Random();
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++) {
                 int temp = random.nextInt(N);
-                if (temp < 2) {
+                if (temp <= N / 5) {
                     field[i][j] = -1;
                     buttonField[i][j] = new BombCellFx();
                 }
@@ -45,12 +52,13 @@ public class FieldFx {
                             if (button == MouseButton.PRIMARY) {
                                 if (!temp.isFlagged) {
                                     temp.isActivated = true;
-                                    temp.button.setStyle("-fx-background-color: #7140ed; ");
+                                    temp.button.setStyle("-fx-background-color: #7140ED; ");
                                     recursiveShow(temp.x, temp.y);
+                                    if (activated == 0) showWin();
                                 }
                             } else if (button == MouseButton.SECONDARY && !temp.isActivated) {
                                 if (!temp.isFlagged) {
-                                    temp.button.setText("Flagged");
+                                    temp.button.setText("F");
                                     temp.isFlagged = !temp.isFlagged;
                                 } else {
                                     temp.button.setText("");
@@ -60,38 +68,62 @@ public class FieldFx {
                         });
                     }
                 }
-                    if (buttonField[i][j] instanceof  BombCell) {
-                        BombCell temp = (BombCell) buttonField[i][j];
-                        temp.button.setOnMouseClicked((MouseEvent event) -> {
-                            MouseButton button = event.getButton();
+                if (buttonField[i][j] instanceof BombCell) {
+                    BombCell temp = (BombCell) buttonField[i][j];
 
-                            if (button == MouseButton.PRIMARY) {
-                                if (!temp.isFlagged) {
-                                    temp.button.setText("Bomb");
-                                    temp.button.setStyle("-fx-background-color: #7140ed; ");
-                                    temp.isActivated = true;
-                                    bombShow();
-                                }
-                            }   else if (button == MouseButton.SECONDARY && !temp.isActivated){
-                                if (!temp.isFlagged) {
-                                    temp.button.setText("Flagged");
-                                    temp.isFlagged = !temp.isFlagged;
-                                }
-                                else {
-                                    temp.button.setText("");
-                                    temp.isFlagged = !temp.isFlagged;
-                                }
+                    temp.button.setOnMouseClicked((MouseEvent event) -> {
+                        MouseButton button = event.getButton();
+
+                        if (button == MouseButton.PRIMARY) {
+                            if (!temp.isFlagged) {
+                                temp.button.setText("B");
+                                temp.button.setStyle("-fx-background-color: #7140ED; ");
+                                temp.isActivated = true;
+                                bombShow();
+                                showLose();
                             }
-                        });
-                    }
-
+                        } else if (button == MouseButton.SECONDARY && !temp.isActivated) {
+                            if (!temp.isFlagged) {
+                                temp.button.setText("F");
+                                activated--;
+                                temp.isFlagged = !temp.isFlagged;
+                            } else {
+                                temp.button.setText("");
+                                activated++;
+                                temp.isFlagged = !temp.isFlagged;
+                            }
+                        }
+                    });
+                }
             }
+    }
+
+    public static void showWin() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("End of game");
+        alert.setHeaderText(null);
+        alert.setContentText("You won, congratulations.");
+        alert.showAndWait();
+        System.exit(0);
+    }
+
+    private static void showLose() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("End of game");
+        alert.setHeaderText(null);
+        alert.setContentText("You lost, sorry.");
+        alert.showAndWait();
+        System.exit(0);
     }
 
     private void bombShow() {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 buttonField[i][j].show();
+    }
+
+    private boolean isCorrectIndex(int x, int y) {
+        return (x >= 0 && y >= 0 && y < N && x < N);
     }
 
     private void recursiveShow(int x, int y) {
@@ -108,6 +140,4 @@ public class FieldFx {
                         && !this.buttonField[x + xAcc][y + yAcc].isActivated)
                     this.buttonField[x + xAcc][y + yAcc].show();
     }
-
-
 }
